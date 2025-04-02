@@ -1,32 +1,29 @@
-name: Build APK with Buildozer
+name: Build APK
 
 on:
   push:
     branches:
-      - main  # Hoặc thay bằng nhánh bạn muốn trigger workflow khi push lên
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Check out the code
+    # 1. Checkout code
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
+    # 2. Set up Python
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: 3.8
 
+    # 3. Install dependencies
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip
-        pip install --upgrade pip
-        pip install buildozer
-
-    - name: Install Android dependencies
-      run: |
         sudo apt-get install -y openjdk-8-jdk
         sudo apt-get install -y git
         sudo apt-get install -y unzip
@@ -36,8 +33,41 @@ jobs:
         sudo apt-get install -y lib32z1
         sudo apt-get install -y libbz2-dev
         sudo apt-get install -y libssl-dev
+        sudo apt-get install -y lib32ncurses5-dev
+        sudo apt-get install -y lib32stdc++6
+        sudo apt-get install -y lib32z1-dev
+        sudo apt-get install -y libltdl-dev
+        sudo apt-get install -y libssl1.0-dev
 
+    # 4. Install Buildozer
+    - name: Install Buildozer
+      run: |
+        python -m pip install --upgrade pip
+        pip install buildozer
+
+    # 5. Verify Buildozer installation
+    - name: Verify Buildozer
+      run: |
+        buildozer --version
+
+    # 6. Install Android dependencies (SDK/NDK)
+    - name: Install Android SDK/NDK
+      run: |
+        # Download and install Android SDK and NDK
+        wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O android-tools.zip
+        unzip android-tools.zip -d $HOME/android
+        yes | $HOME/android/cmdline-tools/bin/sdkmanager --licenses
+        $HOME/android/cmdline-tools/bin/sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+        $HOME/android/cmdline-tools/bin/sdkmanager "ndk;21.4.7075529"
+
+    # 7. Build APK using Buildozer
     - name: Build APK
       run: |
-        cd <your-project-directory>  # Thay <your-project-directory> bằng thư mục chứa file buildozer.spec của bạn
         buildozer android debug
+        
+    # 8. Upload APK as artifact
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: apk
+        path: bin/*.apk
