@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     # 1. Checkout code
     - name: Checkout code
@@ -64,10 +64,10 @@ jobs:
     - name: Build APK
       run: |
         buildozer android debug
-        
+
     # 8. Upload APK as artifact
     - name: Upload APK artifact
       uses: actions/upload-artifact@v2
       with:
         name: apk
-        path: bin/*.apk
+        path: ./bin/*.apk  # Đảm bảo đường dẫn tới tệp APK đúng
