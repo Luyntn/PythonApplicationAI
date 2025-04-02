@@ -38,4 +38,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: android-apk
-        path: bin/yourappname-debug.apk  # Hoặc APK release tương ứng
+        path: bin/*.apk  # Đảm bảo đường dẫn đúng, trong trường hợp APK có tên khác
