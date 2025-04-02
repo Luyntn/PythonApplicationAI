@@ -1,41 +1,43 @@
-name: Build APK
+name: Build APK with Buildozer
 
 on:
   push:
     branches:
-      - main   # Hoặc tên nhánh mà bạn muốn trigger build
-  pull_request:
-    branches:
-      - main
+      - main  # Hoặc thay bằng nhánh bạn muốn trigger workflow khi push lên
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
+    - name: Check out the code
       uses: actions/checkout@v2
-      
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'  # Hoặc phiên bản Python bạn đang sử dụng
+        python-version: '3.8'
 
     - name: Install dependencies
       run: |
-        sudo apt update
-        sudo apt install -y python3-pip python3-dev build-essential \
-        libssl-dev libffi-dev libsqlite3-dev libjpeg-dev \
-        liblcms2-dev libfreetype6-dev libxml2-dev libxslt1-dev \
-        zlib1g-dev git
+        sudo apt-get update
+        sudo apt-get install -y python3-pip
+        pip install --upgrade pip
         pip install buildozer
 
-    - name: Build APK using Buildozer
+    - name: Install Android dependencies
       run: |
-        buildozer -v android debug  # Hoặc android release nếu bạn muốn APK release
-    
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: android-apk
-        path: bin/*.apk  # Đảm bảo đường dẫn đúng, trong trường hợp APK có tên khác
+        sudo apt-get install -y openjdk-8-jdk
+        sudo apt-get install -y git
+        sudo apt-get install -y unzip
+        sudo apt-get install -y zlib1g-dev
+        sudo apt-get install -y libncurses5
+        sudo apt-get install -y libstdc++6
+        sudo apt-get install -y lib32z1
+        sudo apt-get install -y libbz2-dev
+        sudo apt-get install -y libssl-dev
+
+    - name: Build APK
+      run: |
+        cd <your-project-directory>  # Thay <your-project-directory> bằng thư mục chứa file buildozer.spec của bạn
+        buildozer android debug
