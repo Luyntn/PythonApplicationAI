@@ -7,67 +7,73 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   # Chạy trên máy Ubuntu mới nhất
 
     steps:
-    # 1. Checkout code
+    # 1. Checkout mã nguồn từ GitHub
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        ref: main   # Xác nhận sử dụng nhánh main
 
-    # 2. Set up Python
+    # 2. Cài đặt Python 3.8
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: '3.8'
 
-    # 3. Install dependencies
+    # 3. Cài đặt các công cụ cần thiết (SDK, NDK, Buildozer)
     - name: Install dependencies
       run: |
+        # Cài đặt các công cụ hệ thống cần thiết
         sudo apt-get update
-        sudo apt-get install -y openjdk-8-jdk
-        sudo apt-get install -y git
-        sudo apt-get install -y unzip
-        sudo apt-get install -y zlib1g-dev
-        sudo apt-get install -y libncurses5
-        sudo apt-get install -y libstdc++6
-        sudo apt-get install -y lib32z1
-        sudo apt-get install -y libbz2-dev
-        sudo apt-get install -y libssl-dev
-        sudo apt-get install -y lib32ncurses5-dev
-        sudo apt-get install -y lib32stdc++6
-        sudo apt-get install -y lib32z1-dev
-        sudo apt-get install -y libltdl-dev
-        sudo apt-get install -y libssl1.0-dev
+        sudo apt-get install -y openjdk-8-jdk git unzip zlib1g-dev libncurses5 libstdc++6 lib32z1 libbz2-dev libssl-dev lib32ncurses5-dev lib32stdc++6 lib32z1-dev libltdl-dev libssl1.0-dev
 
-    # 4. Install Buildozer
+    # 4. Cài đặt Buildozer
     - name: Install Buildozer
       run: |
         python -m pip install --upgrade pip
         pip install buildozer
 
-    # 5. Verify Buildozer installation
-    - name: Verify Buildozer
-      run: |
-        buildozer --version
-
-    # 6. Install Android dependencies (SDK/NDK)
+    # 5. Cài đặt Android SDK/NDK
     - name: Install Android SDK/NDK
       run: |
-        # Download and install Android SDK and NDK
+        # Tải về và giải nén Android Command Line Tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O android-tools.zip
         unzip android-tools.zip -d $HOME/android
         yes | $HOME/android/cmdline-tools/bin/sdkmanager --licenses
         $HOME/android/cmdline-tools/bin/sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
         $HOME/android/cmdline-tools/bin/sdkmanager "ndk;21.4.7075529"
 
-    # 7. Build APK using Buildozer
+    # 6. Cấu hình biến môi trường cho Buildozer
+    - name: Set environment variables
+      run: |
+        echo "ANDROID_HOME=$HOME/android" >> $GITHUB_ENV
+        echo "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $GITHUB_ENV
+        echo "PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH" >> $GITHUB_ENV
+
+    # 7. Kiểm tra cấu hình file buildozer.spec (Không phải bước bắt buộc nhưng hữu ích để xác nhận cấu hình)
+    - name: Check buildozer.spec file
+      run: |
+        cat buildozer.spec
+
+    # 8. Build APK với Buildozer
     - name: Build APK
       run: |
+        cd $GITHUB_WORKSPACE
         buildozer android debug
 
-    # 8. Upload APK as artifact
+    # 9. Tải APK lên như là artifact để tải về
     - name: Upload APK artifact
       uses: actions/upload-artifact@v2
       with:
         name: apk
-        path: ./bin/*.apk  # Đảm bảo đường dẫn tới tệp APK đúng
+        path: ./bin/*.apk
+
+    # 10. Kiểm tra lỗi và cảnh báo
+    - name: Check for errors
+      run: |
+        if [ $? -ne 0 ]; then
+          echo "Build failed. Please check the logs above for errors."
+          exit 1
+        fi
