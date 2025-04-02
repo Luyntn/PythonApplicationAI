@@ -1,0 +1,41 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main   # Hoặc tên nhánh mà bạn muốn trigger build
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Hoặc phiên bản Python bạn đang sử dụng
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip python3-dev build-essential \
+        libssl-dev libffi-dev libsqlite3-dev libjpeg-dev \
+        liblcms2-dev libfreetype6-dev libxml2-dev libxslt1-dev \
+        zlib1g-dev git
+        pip install buildozer
+
+    - name: Build APK using Buildozer
+      run: |
+        buildozer -v android debug  # Hoặc android release nếu bạn muốn APK release
+    
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: android-apk
+        path: bin/yourappname-debug.apk  # Hoặc APK release tương ứng
